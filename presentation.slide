@@ -61,21 +61,21 @@ func sendEmail(from string, to []string, subj string, msg string) error
 ```
 - You might implement it as follows
 
-.code sendEmailSimple.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
+.code sendemailsimple/sendEmailSimple.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
 
 ## And call it like this:
-.code sendEmailSimple.go  /^func main/,/^}/ 
+.code sendemailsimple/sendEmailSimple.go  /^func main/,/^}/ 
 
 ## How do we test this logic?
 - You COULD just be OK with an email getting sent to you
 - Empty string case:
 
-.code sendEmailSimple_test.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
+.code sendemailsimple/sendEmailSimple_test.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
 
 ## How do we test this logic (2)?
 - "Good case"
 
-.code sendEmailSimple_test.go /^//START CUT 2 OMIT/,/^//END CUT 2 OMIT/ 
+.code sendemailsimple/sendEmailSimple_test.go /^//START CUT 2 OMIT/,/^//END CUT 2 OMIT/ 
 
 
 ## This is obviously clunky
@@ -93,7 +93,7 @@ func sendEmail(from string, to []string, subj string, msg string) error
 
 ## Define an emailConfig type
 
-.code sendEmailABitDifferent.go /^//START TYPEDEF OMIT/,/^//END TYPEDEF OMIT/ 
+.code sendemailabitdifferent/sendEmailABitDifferent.go /^//START TYPEDEF OMIT/,/^//END TYPEDEF OMIT/ 
 
 - And also a method on that type that sends the email:
 
@@ -102,10 +102,10 @@ func (e *emailConfig) sendMessage(msg string) error
 ```
 
 ## Putting that all together
-.code sendEmailABitDifferent.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
+.code sendemailabitdifferent/sendEmailABitDifferent.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
 
 ## Putting that all together (2)
-.code sendEmailABitDifferent.go /^//START CUT 2 OMIT/,/^//END CUT 2 OMIT/ 
+.code sendemailabitdifferent/sendEmailABitDifferent.go /^//START CUT 2 OMIT/,/^//END CUT 2 OMIT/ 
 
 - But we have the same problem.  We can't test it without actually sending an email.  
 
@@ -143,10 +143,10 @@ func (e *emailConfig) sendMessage(msg string) {
 - *VERY* common pattern in Go, especially if you want to handle the returned error from `sendTheEmail`
 
 ## Putting it all together - again
-.code sendMessageFinal.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
+.code sendmessage/sendMessageFinal.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
 
 ## Putting it all together - again (2)
-.code sendMessageFinal.go /^//START CUT 2 OMIT/,/^//END CUT 2 OMIT/ 
+.code sendmessage/sendMessageFinal.go /^//START CUT 2 OMIT/,/^//END CUT 2 OMIT/ 
 
 ## What we get
 - Now, our MessageSender can be anything at all!  
@@ -199,29 +199,29 @@ SendMessageIfNotBlank(s, "This is a slack message")
 - We can condense the testing using table-driven tests, and even check our error logic within `SendMessageIfNotBlankEmptyString`:
 - Defined types `goodEmailConfig`, `badEmailConfig` that will return nil/non-nil errors when their `sendMessage` methods are called:
 
-.code sendmessage_final_test/sendMessageFinal_test.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
+.code sendmessage_test_consolidated/sendMessageFinal_test.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
 
 ## Table-driven testing in Go (2)
 
 - Now, define a `testCase` type that contains all the necessary info (very much like using `pytest.mark.parametrize` in python...but clearer)
 
-.code sendmessage_final_test/sendMessageFinal_test.go /START TYPEDEF OMIT/,/END TYPEDEF OMIT/ 
+.code sendmessage_test_consolidated/sendMessageFinal_test.go /START TYPEDEF OMIT/,/END TYPEDEF OMIT/ 
 
 ## Table-driven testing in Go (3)
 - And define your test cases:
 
-.code sendmessage_final_test/sendMessageFinal_test.go /START TESTCASES1 OMIT/,/END TESTCASES1 OMIT/ 
+.code sendmessage_test_consolidated/sendMessageFinal_test.go /START TESTCASES1 OMIT/,/END TESTCASES1 OMIT/ 
 
 - We wouldn't have been able to do the highlighted case before
 
 ##
 
-.code sendmessage_final_test/sendMessageFinal_test.go /START TESTCASES2 OMIT/,/END TESTCASES2 OMIT/ 
+.code sendmessage_test_consolidated/sendMessageFinal_test.go /START TESTCASES2 OMIT/,/END TESTCASES2 OMIT/ 
 - The last error is what we should get based on our mock of *badEmail.sendMessage
 
 ## The actual test:
 
-.code sendmessage_final_test/sendMessageFinal_test.go /START TEST OMIT/,/END TEST OMIT/ 
+.code sendmessage_test_consolidated/sendMessageFinal_test.go /START TEST OMIT/,/END TEST OMIT/ 
 
 ## 
 - t.Run has the signature 
@@ -230,6 +230,9 @@ func (t *testing.T) Run(string, func(*testing.T)) bool
 ```
 - One can check the return value, or simply call T.Fatal or T.Error from inside the test
 - Note that in our `switch` statement, we're defining our test failure modes
+- Run the test!
+
+.play sendmessage_test_consolidated/sendMessageFinal_test.go /^func main/,/^}/
 
 ## Final thoughts on testing
 - Not only are we able to test the email sending logic without somehow messing with email settings on the host, but this is also a true, safe unit test that can be deployed, for example, in GitHub Actions.

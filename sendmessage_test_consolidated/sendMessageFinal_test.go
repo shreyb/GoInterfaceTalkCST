@@ -120,5 +120,6 @@ func SendMessageIfNotBlank(m MessageSender, msg string) error {
 		log.Print("Empty message - not sending anything")
 		return errEmptyMessage
 	}
+	log.Print("Sending message")
 	return m.sendMessage(msg)
 }
