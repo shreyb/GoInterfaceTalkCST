@@ -1,7 +1,8 @@
 To run this presentation:
 
 1. Clone this repository
-2. If you do not have go's `present` tool installed go install it:  `go install golang.org/x/tools/cmd/present@v0.20.0`
-3. Run `present`
-4. Navigate to the link provided at stdout (should be http://127.0.0.1:3999)
-5. Click on `presentation.slide` to start the presentation
+2. Navigate into the directory containing this repository
+3. If you do not have go's `present` tool installed go install it:  `go install golang.org/x/tools/cmd/present@v0.20.0`
+4. Run `present`
+5. Navigate to the link provided at stdout (should be http://127.0.0.1:3999)
+6. Click on `presentation.slide` to start the presentation
