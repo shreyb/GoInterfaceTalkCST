@@ -1,7 +1,7 @@
 # Go Interfaces and Testing
-DATE TODO
 
 Shreyas Bhat
+1 May 2024
 CST Group Meeting
 
 ## Vocabulary
@@ -10,7 +10,7 @@ CST Group Meeting
 - *type*: "A type determines a set of values together with operations and methods specific to those values" (`int`, `string`, custom types)
 - *receiver*: Special parameter that allows you to associate a function with a type. This is the closest to classes we get in Go.
 - *method*: A function with a special *receiver* argument.  
-`func myFunc (a myType, b string) <==> func (a myType) myMethod(b string)`
+`func myFunc(a myType, b string) int <==> func (a myType) myMethod(b string) int`
 
 ## Interfaces
 - *interface type*: "A set of method signatures.  A value of interface type can hold any value that implements those methods"
@@ -28,7 +28,7 @@ type Flower struct{
     heightcm float64
 }
 
-func (f Flower) Grow(t time) {f.heightcm += 1}
+func (f *Flower) Grow(t time) {f.heightcm += 1}
 ```
 
 - In this example, `Dog` implements the `Animal` interface, but `Flower` does not
@@ -66,6 +66,14 @@ func sendEmail(from string, to []string, subj string, msg string) error
 ## And call it like this:
 .code sendemailsimple/sendEmailSimple.go  /^func main/,/^}/ 
 
+- Note: For the above, suppose that `sendTheEmail` is a function from some external library that actually sends an email and looks like this:
+
+```go
+func sendTheEmail(from string, to []string, subject string, message string) error
+```
+
+
+
 ## How do we test this logic?
 - You COULD just be OK with an email getting sent to you
 - Empty string case:
@@ -88,17 +96,17 @@ func sendEmail(from string, to []string, subj string, msg string) error
 - So we want to test `sendEmail` WITHOUT sending an actual email each time
 - You can reconfigure postfix and all
 - But it's nicer if you can mock this
-- Whereas python has `unittest.mock` and `pytest.monkeypatch`, etc., idiomatic Go encourages using *interfaces* for external dependencies like this
+- Whereas python has `unittest.mock` and `pytest.monkeypatch`, etc., idiomatic Go encourages using *interfaces* for external dependencies like this case (we depend on an SMTP server for the operation).
 
 
 ## Define an emailConfig type
 
 .code sendemailabitdifferent/sendEmailABitDifferent.go /^//START TYPEDEF OMIT/,/^//END TYPEDEF OMIT/ 
 
-- And also a method on that type that sends the email:
+- And also a method on that type that sends the email and implements the logic:
 
 ```go
-func (e *emailConfig) sendMessage(msg string) error
+func (e emailConfig) sendMessage(msg string) error
 ```
 
 ## Putting that all together
@@ -117,7 +125,7 @@ type MessageSender interface {
 }
 ```
 - Any type that has a `sendMessage(string) error` method implements this interface automatically.
-- Check it out - our `*emailConfig` type implements it!  
+- Check it out - our `emailConfig` type implements it!  
 - So we can introduce a function that uses this interface and move the logic there
 
 ## New Function that takes the interface as a parameter
@@ -128,6 +136,7 @@ func SendMessageIfNotBlank(m MessageSender, msg string) error {
 		log.Info("Empty message - not sending anything")
 		return errEmptyMessage
 	}
+	log.Print("Sending message")
 	return m.sendMessage(msg)
 }
 ```
@@ -135,8 +144,8 @@ func SendMessageIfNotBlank(m MessageSender, msg string) error {
 ## Bonus: Isolation of logic
 - This refactoring allows us to isolate email-sending code for `emailConfig` type
 ```go
-func (e *emailConfig) sendMessage(msg string) {
-	err := sendTheEmail(msg)
+func (e emailConfig) sendMessage(msg string) {
+	err := sendTheEmail(e.from, e.to, e.subj, msg)
 	return err  	
 }
 ```
@@ -149,8 +158,9 @@ func (e *emailConfig) sendMessage(msg string) {
 .code sendmessage/sendMessageFinal.go /^//START CUT 2 OMIT/,/^//END CUT 2 OMIT/ 
 
 ## What we get
-- Now, our MessageSender can be anything at all!  
+- Now, our `MessageSender` can be anything at all!  
 - This also gives us a VERY easy way to mock sending an email if it's not blank, because remember, we want to test the logic
+	- This means that we're no longer testing `sendMessage`, but now `SendMessageIfNotBlank`
 - How?  We now just plug in our own fake `emailConfig`!
 
 ## Testing SendMessageIfNotBlank 
@@ -158,7 +168,7 @@ func (e *emailConfig) sendMessage(msg string) {
 ## fakeEmailConfig:
 
 .code sendmessage/sendMessageFinal_test.go /^//START TYPEDEF OMIT/,/^//END TYPEDEF OMIT/ 
-- Note that calling `*fakeEmailConfig.sendMessage()` doesn't actually send an email!
+- Note that calling `fakeEmailConfig.sendMessage()` doesn't actually send an email!
 
 ## Tests using fakeEmailConfig
 .code sendmessage_test/sendMessageFinal_test.go /^func TestSendMessageIfNotBlankEmptyString/,/^}/
@@ -166,29 +176,30 @@ func (e *emailConfig) sendMessage(msg string) {
 
 ## Let's actually run those tests:
 .play sendmessage_test/sendMessageFinal_test.go /^func main/,/^}/
-- Note: This is not how you actually run tests in Go.  This is just how you can programmatically run go tests as if they were an executable Go script outside of the go tooling
+- Note: This is not how you actually run tests in Go.  
+- Above just programmatically runs Go tests as if they were an executable Go script outside of the go tooling
 - From within a Go codebase, simply run `go test` to run the tests.
 
 ## Final Cool Things
 
 ## We can now make ANYTHING send a message
-- e.g. We can implement a `slackMessage` type that defines in its `sendMessage` method how to send a slack message:
+- e.g. We can implement a `slackMessageConfig` type that defines in its `sendMessage` method how to send a slack message:
 
 ```go
-type slackMessage struct {
+type slackMessageConfig struct {
 	webhookURL string
+	headers []string
 }
 
-func (s *slackMessage) sendMessage(msg string) error {
-	err := sendTheWebRequest(msg)
-	return err
+func (s slackMessageConfig) sendMessage(msg string) error {
+	return sendTheWebRequest(s.webhookURL, s.headers, msg)
 }
 ```
 
 Now you can send a slack message by calling: 
 
 ```go
-s := &slackMessage("https://slack.com/somethingorother/12345677")
+s := slackMessageConfig{webhookURL: "https://slack.com/somethingorother/12345677"}
 SendMessageIfNotBlank(s, "This is a slack message")
 ```
 
@@ -196,8 +207,8 @@ SendMessageIfNotBlank(s, "This is a slack message")
 
 ## Table-driven testing in Go
 
-- We can condense the testing using table-driven tests, and even check our error logic within `SendMessageIfNotBlankEmptyString`:
-- Defined types `goodEmailConfig`, `badEmailConfig` that will return nil/non-nil errors when their `sendMessage` methods are called:
+- We can condense the testing code using table-driven tests, and even check our error logic within `SendMessageIfNotBlankEmptyString`:
+- Define types `goodEmailConfig`, `badEmailConfig` that will return `nil`/non-`nil` errors when their `sendMessage` methods are called:
 
 .code sendmessage_test_consolidated/sendMessageFinal_test.go /^//START CUT 1 OMIT/,/^//END CUT 1 OMIT/ 
 
@@ -217,7 +228,7 @@ SendMessageIfNotBlank(s, "This is a slack message")
 ##
 
 .code sendmessage_test_consolidated/sendMessageFinal_test.go /START TESTCASES2 OMIT/,/END TESTCASES2 OMIT/ 
-- The last error is what we should get based on our mock of *badEmail.sendMessage
+- The last error is what we should get based on our mock of badEmail.sendMessage
 
 ## The actual test:
 
@@ -229,7 +240,6 @@ SendMessageIfNotBlank(s, "This is a slack message")
 func (t *testing.T) Run(string, func(*testing.T)) bool
 ```
 - One can check the return value, or simply call T.Fatal or T.Error from inside the test
-- Note that in our `switch` statement, we're defining our test failure modes
 - Run the test!
 
 .play sendmessage_test_consolidated/sendMessageFinal_test.go /^func main/,/^}/
@@ -237,3 +247,5 @@ func (t *testing.T) Run(string, func(*testing.T)) bool
 ## Final thoughts on testing
 - Not only are we able to test the email sending logic without somehow messing with email settings on the host, but this is also a true, safe unit test that can be deployed, for example, in GitHub Actions.
 - We also got two extra tests by implementing the interface with a "badEmailConfig" that purposefully returns a non-nil error!
+
+- Code used in this talk available at https://github.com/shreyb/GoInterfaceTalkCST

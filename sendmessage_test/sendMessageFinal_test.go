@@ -38,7 +38,7 @@ func TestSendMessageIfNotBlankEmptyString(t *testing.T) {
 	f := fakeEmailConfig{}
 	err := SendMessageIfNotBlank(f, "")
 	if !errors.Is(err, errEmptyMessage) {
-		t.Fatal("Should have not sent an email, and gotten errEmptyMessage back")
+		t.Error("Should have not sent an email, and gotten errEmptyMessage back")
 	}
 }
 
@@ -46,7 +46,7 @@ func TestSendMessageIfNotBlankWithString(t *testing.T) {
 	f := fakeEmailConfig{}
 	err := SendMessageIfNotBlank(f, "test message")
 	if err != nil {
-		t.Fatal("Should have gotten a nil error from SendMessageIfNotBlank")
+		t.Error("Should have gotten a nil error from SendMessageIfNotBlank")
 	}
 }
 

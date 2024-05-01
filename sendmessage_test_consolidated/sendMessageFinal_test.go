@@ -26,11 +26,13 @@ func (g goodEmailConfig) sendMessage(msg string) error {
 	return nil
 }
 
+var errBadEmailConfig error = errors.New("Message was not sent")
+
 type badEmailConfig struct{}
 
 // We ALWAYS return a non-nil error here
 func (b badEmailConfig) sendMessage(msg string) error {
-	return errors.New("Message was not sent")
+	return errBadEmailConfig
 }
 
 // END CUT 1 OMIT
@@ -72,7 +74,7 @@ func TestSendMessageIfNotBlank(t *testing.T) {
 			"Bad email config, non-blank message - should not send",
 			badEmailConfig{},
 			"This is a test message",
-			errors.New("Message was not sent"), // HL
+			errBadEmailConfig, // HL
 		},
 	}
 	// END TESTCASES2 OMIT
@@ -83,26 +85,14 @@ func TestSendMessageIfNotBlank(t *testing.T) {
 	// inside the test
 	// START TEST OMIT
 	for _, test := range testCases {
-		t.Run(
-			test.description,
-			func(t *testing.T) {
-				err := SendMessageIfNotBlank(test.m, test.msg)
-				switch {
-				case test.expectedErr == nil:
-					if err != nil {
-						t.Errorf("We should have gotten a nil error (the message would have sent).  We got %v instead", err)
-					}
-				case errors.Is(test.expectedErr, errEmptyMessage):
-					if !errors.Is(err, errEmptyMessage) {
-						t.Errorf("We were expecting errEmptyMessage.  We got %v instead", err)
-					}
-				default:
-					if err == nil {
-						t.Error("We should have gotten a non-nil error (the message would not have sent).  We got nil instead")
-					}
-				}
-			},
-		)
+		t.Run(test.description, func(t *testing.T) {
+			err := SendMessageIfNotBlank(test.m, test.msg)
+			if !errors.Is(err, test.expectedErr) {
+				t.Errorf("We got the wrong error.  Expected %v, got %v instead.",
+					test.expectedErr,
+					err)
+			}
+		})
 	}
 	// END TEST OMIT
 }
