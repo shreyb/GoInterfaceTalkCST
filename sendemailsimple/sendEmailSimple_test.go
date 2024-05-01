@@ -15,7 +15,7 @@ func TestSendEmailEmptyString(t *testing.T) {
 		"",
 	)
 	if !errors.Is(err, errEmptyMessage) {
-		t.Fatal("We should have not sent the email, and gotten back an errEmptyMessage")
+		t.Error("We should have not sent the email, and gotten back an errEmptyMessage")
 	}
 }
 
@@ -33,7 +33,7 @@ func TestSendEmail(t *testing.T) {
 	)
 
 	if err != nil {
-		t.Fatal("There should have been no error")
+		t.Error("There should have been no error")
 	}
 	t.Log("OK, so there was no error.  Go check your inbox to make sure this REALLY passes")
 }

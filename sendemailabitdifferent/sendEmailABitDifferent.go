@@ -17,12 +17,12 @@ type emailConfig struct { // HL
 
 // END TYPEDEF OMIT
 
-func (e *emailConfig) sendMessage(msg string) error { // HL
+func (e emailConfig) sendMessage(msg string) error { // HL
 	if msg == "" {
 		log.Print("Empty message - not sending anything")
 		return errEmptyMessage
 	}
-	err := sendTheEmail(msg)
+	err := sendTheEmail(e.from, e.to, e.subj, msg)
 	return err
 }
 
@@ -30,7 +30,7 @@ func (e *emailConfig) sendMessage(msg string) error { // HL
 
 // START CUT 2 OMIT
 func main() { // HL
-	e := &emailConfig{
+	e := emailConfig{
 		from: "foo@example.com",
 		to:   []string{"bar@example.com", "baz@example.com"},
 		subj: "[EXTERNAL] - SUPER important",
@@ -46,4 +46,4 @@ func main() { // HL
 
 // END CUT 2 OMIT
 
-func sendTheEmail(msg string) error { return nil }
+func sendTheEmail(from string, to []string, subject, msg string) error { return nil }

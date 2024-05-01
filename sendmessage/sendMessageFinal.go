@@ -18,8 +18,8 @@ type emailConfig struct {
 	subj string
 }
 
-func (e *emailConfig) sendMessage(msg string) error {
-	err := sendTheEmail(msg)
+func (e emailConfig) sendMessage(msg string) error {
+	err := sendTheEmail(e.from, e.to, e.subj, msg)
 	return err
 }
 
@@ -35,7 +35,7 @@ func SendMessageIfNotBlank(m MessageSender, msg string) error {
 }
 
 func main() {
-	e := &emailConfig{
+	e := emailConfig{
 		from: "foo@example.com",
 		to:   []string{"bar@example.com", "baz@example.com"},
 		subj: "[EXTERNAL] - SUPER important",

@@ -13,7 +13,9 @@ func sendEmail(from string, to []string, subj string, msg string) error { // HL
 		log.Print("Empty message - not sending anything")
 		return errEmptyMessage
 	}
-	err := sendTheEmail(msg)
+
+	// sendTheEmail should return nil if there was no error
+	err := sendTheEmail(from, to, subj, msg)
 	return err // Yes - this could be simply written as return sendTheEmail
 }
 
@@ -37,4 +39,4 @@ func main() {
 
 // END CUT 2
 
-func sendTheEmail(msg string) error { return nil }
+func sendTheEmail(from string, to []string, subject, msg string) error { return nil }

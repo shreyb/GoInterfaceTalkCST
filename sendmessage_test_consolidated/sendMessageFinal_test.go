@@ -22,14 +22,14 @@ func main() {
 type goodEmailConfig struct{}
 
 // Calling sendMessage on the goodEmailConfig type doesn't send any emails!
-func (g *goodEmailConfig) sendMessage(msg string) error {
+func (g goodEmailConfig) sendMessage(msg string) error {
 	return nil
 }
 
 type badEmailConfig struct{}
 
 // We ALWAYS return a non-nil error here
-func (b *badEmailConfig) sendMessage(msg string) error {
+func (b badEmailConfig) sendMessage(msg string) error {
 	return errors.New("Message was not sent")
 }
 
@@ -50,13 +50,13 @@ func TestSendMessageIfNotBlank(t *testing.T) {
 	testCases := []testCase{
 		{
 			"Good email config, blank message - should not send",
-			&goodEmailConfig{},
+			goodEmailConfig{},
 			"",
 			errEmptyMessage,
 		},
 		{
 			"Bad email config, blank message - should not send", // HL
-			&badEmailConfig{},
+			badEmailConfig{},
 			"",
 			errEmptyMessage,
 		},
@@ -64,13 +64,13 @@ func TestSendMessageIfNotBlank(t *testing.T) {
 		// START TESTCASES2 OMIT
 		{
 			"Good email config, non-blank message - should send",
-			&goodEmailConfig{},
+			goodEmailConfig{},
 			"This is a test message",
 			nil,
 		},
 		{
 			"Bad email config, non-blank message - should not send",
-			&badEmailConfig{},
+			badEmailConfig{},
 			"This is a test message",
 			errors.New("Message was not sent"), // HL
 		},

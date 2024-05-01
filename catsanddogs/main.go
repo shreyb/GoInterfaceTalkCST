@@ -18,7 +18,7 @@ func AnimalGreeting(a Animal) { // HL
 }
 
 func main() {
-	var d Dog
+	var d Dog // Could also say d := Dog{}
 	var c Cat
 
 	AnimalGreeting(d)

@@ -11,7 +11,7 @@ import (
 type fakeEmailConfig struct{}
 
 // Calling sendMessage on the fakeEmail type doesn't send any emails!
-func (f *fakeEmailConfig) sendMessage(msg string) error {
+func (f fakeEmailConfig) sendMessage(msg string) error {
 	return nil
 }
 
@@ -19,7 +19,7 @@ func (f *fakeEmailConfig) sendMessage(msg string) error {
 
 // START OMIT
 func TestSendMessageIfNotBlankEmptyString(t *testing.T) {
-	f := &fakeEmailConfig{}
+	f := fakeEmailConfig{}
 	err := SendMessageIfNotBlank(f, "")
 	if !errors.Is(err, errEmptyMessage) {
 		t.Fatal("Should have not sent an email, and gotten errEmptyMessage back")
@@ -27,7 +27,7 @@ func TestSendMessageIfNotBlankEmptyString(t *testing.T) {
 }
 
 func TestSendMessageIfNotBlankWithString(t *testing.T) {
-	f := &fakeEmailConfig{}
+	f := fakeEmailConfig{}
 	err := SendMessageIfNotBlank(f, "test message")
 	if err != nil {
 		t.Fatal("Should have gotten a nil error from SendMessageIfNotBlank")
